@@ -1,14 +1,20 @@
-import os
-import datetime
+from fastapi import FastAPI, UploadFile
 from ultralytics import YOLO
+import shutil
+import os
 
-outputFolder = "output"
+app = FastAPI()
+model = YOLO("yolo11n.pt")
 
-model = YOLO('yolo11n.pt')
-results = model(["resources/bild.jpg"])
+@app.post("/predict")
+async def predict(file: UploadFile):
+    os.makedirs("input", exist_ok=True)
+    file_path = f"input/{file.filename}"
+    
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
 
-for result in results:
-    result.show()
-    timestamp =  datetime.datetime.now().strftime("%H%M")
-    save_path = os.path.join(outputFolder,f"{timestamp}_result.jpg")
-    result.save(filename = save_path)
+    results = model(file_path)
+    results[0].save(filename="output/result.jpg")
+
+    return {"status": "done"}
