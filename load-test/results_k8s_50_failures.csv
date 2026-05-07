@@ -1,0 +1,5 @@
+Method,Name,Error,Occurrences
+GET,/health,"ConnectionResetError(104, 'Connection reset by peer')",31
+POST,/predict,"ConnectionResetError(104, 'Connection reset by peer')",14
+POST,/predict,"ConnectionRefusedError(111, 'Connection refused')",9
+GET,/health,"ConnectionRefusedError(111, 'Connection refused')",19

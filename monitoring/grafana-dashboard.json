@@ -1,0 +1,112 @@
+{
+  "dashboard": {
+    "title": "ML-Scaler Performance",
+    "uid": "ml-scaler-perf",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Request Rate (req/s)",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+        "targets": [
+          {
+            "expr": "sum(rate(http_requests_total{job=\"ml-scaler-service\"}[1m])) by (handler, method)",
+            "legendFormat": "{{method}} {{handler}}"
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Average Latency (ms)",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+        "targets": [
+          {
+            "expr": "sum(rate(http_request_duration_seconds_sum{job=\"ml-scaler-service\"}[1m])) by (handler) / sum(rate(http_request_duration_seconds_count{job=\"ml-scaler-service\"}[1m])) by (handler) * 1000",
+            "legendFormat": "{{handler}}"
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "P95 Latency (ms)",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{job=\"ml-scaler-service\"}[1m])) by (le, handler)) * 1000",
+            "legendFormat": "p95 {{handler}}"
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Error Rate (5xx/s)",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+        "targets": [
+          {
+            "expr": "sum(rate(http_requests_total{job=\"ml-scaler-service\", status=~\"5..\"}[1m])) by (handler)",
+            "legendFormat": "5xx {{handler}}"
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "Pod Replica Count",
+        "type": "stat",
+        "gridPos": {"h": 8, "w": 8, "x": 0, "y": 16},
+        "targets": [
+          {
+            "expr": "kube_deployment_status_replicas{deployment=\"ml-scaler\"}",
+            "legendFormat": "replicas"
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "HPA Desired vs Current Replicas",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 16, "x": 8, "y": 16},
+        "targets": [
+          {
+            "expr": "kube_horizontalpodautoscaler_status_desired_replicas{horizontalpodautoscaler=\"ml-scaler-hpa\"}",
+            "legendFormat": "desired"
+          },
+          {
+            "expr": "kube_horizontalpodautoscaler_status_current_replicas{horizontalpodautoscaler=\"ml-scaler-hpa\"}",
+            "legendFormat": "current"
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Pod CPU Usage",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 24},
+        "targets": [
+          {
+            "expr": "sum(rate(container_cpu_usage_seconds_total{pod=~\"ml-scaler.*\", container!=\"\"}[1m])) by (pod)",
+            "legendFormat": "{{pod}}"
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Pod Memory Usage (MB)",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 24},
+        "targets": [
+          {
+            "expr": "sum(container_memory_usage_bytes{pod=~\"ml-scaler.*\", container!=\"\"}) by (pod) / 1024 / 1024",
+            "legendFormat": "{{pod}}"
+          }
+        ]
+      }
+    ],
+    "time": {"from": "now-15m", "to": "now"},
+    "refresh": "5s",
+    "schemaVersion": 39
+  },
+  "overwrite": true
+}

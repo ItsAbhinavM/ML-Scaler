@@ -1,0 +1,7 @@
+Method,Name,Error,Occurrences
+GET,/health,"ConnectionResetError(104, 'Connection reset by peer')",10
+POST,/predict,"ConnectionResetError(104, 'Connection reset by peer')",1
+POST,/predict,"ConnectionRefusedError(111, 'Connection refused')",5
+GET,/health,RemoteDisconnected('Remote end closed connection without response'),360
+POST,/predict,RemoteDisconnected('Remote end closed connection without response'),126
+GET,/health,"ConnectionRefusedError(111, 'Connection refused')",18
