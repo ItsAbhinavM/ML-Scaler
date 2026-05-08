@@ -1,0 +1,3 @@
+Method,Name,Error,Occurrences
+POST,/predict,"ConnectionRefusedError(111, 'Connection refused')",22
+GET,/health,"ConnectionRefusedError(111, 'Connection refused')",59
