@@ -12,6 +12,7 @@ app = FastAPI(title="ML-Scaler YOLO API")
 # Instrument Prometheus metrics at /metrics
 Instrumentator().instrument(app).expose(app)
 
+# Load model once at startup (per worker process)
 model = YOLO("yolo11n.pt")
 
 
@@ -30,7 +31,7 @@ async def predict(file: UploadFile):
         shutil.copyfileobj(file.file, buffer)
 
     start = time.time()
-    results = model(file_path)
+    results = model(file_path, verbose=False)  # verbose=False reduces log spam under load
     inference_time = time.time() - start
 
     detections = []

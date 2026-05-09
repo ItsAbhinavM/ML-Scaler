@@ -1,5 +1,6 @@
 Method,Name,Error,Occurrences
-GET,/health,"ConnectionResetError(104, 'Connection reset by peer')",31
-POST,/predict,"ConnectionResetError(104, 'Connection reset by peer')",14
-POST,/predict,"ConnectionRefusedError(111, 'Connection refused')",9
-GET,/health,"ConnectionRefusedError(111, 'Connection refused')",19
+GET,/health,"ConnectionResetError(104, 'Connection reset by peer')",7
+POST,/predict,"ConnectionResetError(104, 'Connection reset by peer')",40
+POST,/predict,"ConnectionRefusedError(111, 'Connection refused')",19
+GET,/health,"ReadTimeout(ReadTimeoutError(""HTTPConnectionPool(host='192.168.49.2', port=30081): Read timed out. (read timeout=30)""))",1
+GET,/health,"ConnectionRefusedError(111, 'Connection refused')",6

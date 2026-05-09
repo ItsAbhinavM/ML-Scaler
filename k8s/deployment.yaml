@@ -26,16 +26,27 @@ spec:
               memory: "512Mi"
             limits:
               cpu: "1000m"
-              memory: "2Gi"
-          livenessProbe:
+              memory: "3Gi"
+          # Startup probe: generous time for YOLO model download/load
+          startupProbe:
             httpGet:
               path: /health
               port: 8000
-            initialDelaySeconds: 30
-            periodSeconds: 10
+            failureThreshold: 30
+            periodSeconds: 5
+          # Liveness: use TCP socket — it just checks if the port is open
+          # This prevents false kills when uvicorn is busy with inference
+          livenessProbe:
+            tcpSocket:
+              port: 8000
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 6
+          # Readiness: HTTP GET — determines if pod can receive NEW traffic
           readinessProbe:
             httpGet:
               path: /health
               port: 8000
-            initialDelaySeconds: 15
-            periodSeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 10
+            failureThreshold: 3
