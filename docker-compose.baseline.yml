@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   ml-api:
     image: ml-scaler:latest
@@ -10,9 +8,9 @@ services:
 
   prometheus:
     image: prom/prometheus:latest
-    container_name: prometheus
+    container_name: prometheus-baseline
     ports:
-      - "9090:9090"
+      - "9092:9090"   # 9092 avoids conflict with K8s Prometheus on 9090/9091
     volumes:
       - ./monitoring/prometheus-baseline.yml:/etc/prometheus/prometheus.yml
     depends_on:
@@ -20,9 +18,9 @@ services:
 
   grafana:
     image: grafana/grafana:latest
-    container_name: grafana
+    container_name: grafana-baseline
     ports:
-      - "3000:3000"
+      - "3002:3000"   # 3002 avoids conflict with K8s Grafana on 3001
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin
       - GF_SECURITY_ADMIN_USER=admin

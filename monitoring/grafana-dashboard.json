@@ -8,100 +8,218 @@
         "title": "Request Rate (req/s)",
         "type": "timeseries",
         "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+        "datasource": {"type": "prometheus", "uid": "prometheus"},
         "targets": [
           {
-            "expr": "sum(rate(http_requests_total{job=\"ml-scaler-service\"}[1m])) by (handler, method)",
-            "legendFormat": "{{method}} {{handler}}"
+            "expr": "sum(rate(http_requests_total{handler=~\"/predict|/health\"}[1m])) by (handler, method)",
+            "legendFormat": "{{method}} {{handler}}",
+            "datasource": {"type": "prometheus", "uid": "prometheus"}
           }
-        ]
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "reqps",
+            "custom": {"lineWidth": 2, "fillOpacity": 15, "gradientMode": "scheme"}
+          }
+        }
       },
       {
         "id": 2,
         "title": "Average Latency (ms)",
         "type": "timeseries",
         "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+        "datasource": {"type": "prometheus", "uid": "prometheus"},
         "targets": [
           {
-            "expr": "sum(rate(http_request_duration_seconds_sum{job=\"ml-scaler-service\"}[1m])) by (handler) / sum(rate(http_request_duration_seconds_count{job=\"ml-scaler-service\"}[1m])) by (handler) * 1000",
-            "legendFormat": "{{handler}}"
+            "expr": "sum(rate(http_request_duration_seconds_sum{handler=~\"/predict|/health\"}[1m])) by (handler) / sum(rate(http_request_duration_seconds_count{handler=~\"/predict|/health\"}[1m])) by (handler) * 1000",
+            "legendFormat": "{{handler}}",
+            "datasource": {"type": "prometheus", "uid": "prometheus"}
           }
-        ]
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "ms",
+            "custom": {"lineWidth": 2, "fillOpacity": 15, "gradientMode": "scheme"}
+          }
+        }
       },
       {
         "id": 3,
         "title": "P95 Latency (ms)",
         "type": "timeseries",
         "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+        "datasource": {"type": "prometheus", "uid": "prometheus"},
         "targets": [
           {
-            "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{job=\"ml-scaler-service\"}[1m])) by (le, handler)) * 1000",
-            "legendFormat": "p95 {{handler}}"
+            "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{handler=~\"/predict|/health\"}[1m])) by (le, handler)) * 1000",
+            "legendFormat": "p95 {{handler}}",
+            "datasource": {"type": "prometheus", "uid": "prometheus"}
           }
-        ]
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "ms",
+            "custom": {"lineWidth": 2, "fillOpacity": 15, "gradientMode": "scheme"}
+          }
+        }
       },
       {
         "id": 4,
         "title": "Error Rate (5xx/s)",
         "type": "timeseries",
         "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+        "datasource": {"type": "prometheus", "uid": "prometheus"},
         "targets": [
           {
-            "expr": "sum(rate(http_requests_total{job=\"ml-scaler-service\", status=~\"5..\"}[1m])) by (handler)",
-            "legendFormat": "5xx {{handler}}"
+            "expr": "sum(rate(http_requests_total{handler=~\"/predict|/health\", status=~\"5.*\"}[1m])) by (handler) or vector(0)",
+            "legendFormat": "5xx {{handler}}",
+            "datasource": {"type": "prometheus", "uid": "prometheus"}
           }
-        ]
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "reqps",
+            "min": 0,
+            "custom": {"lineWidth": 2, "fillOpacity": 15, "gradientMode": "scheme"}
+          }
+        }
       },
       {
         "id": 5,
         "title": "Pod Replica Count",
         "type": "stat",
         "gridPos": {"h": 8, "w": 8, "x": 0, "y": 16},
+        "datasource": {"type": "prometheus", "uid": "prometheus"},
         "targets": [
           {
             "expr": "kube_deployment_status_replicas{deployment=\"ml-scaler\"}",
-            "legendFormat": "replicas"
+            "legendFormat": "replicas",
+            "datasource": {"type": "prometheus", "uid": "prometheus"}
           }
-        ]
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": null},
+                {"color": "yellow", "value": 2},
+                {"color": "red", "value": 4}
+              ]
+            }
+          }
+        }
       },
       {
         "id": 6,
         "title": "HPA Desired vs Current Replicas",
         "type": "timeseries",
         "gridPos": {"h": 8, "w": 16, "x": 8, "y": 16},
+        "datasource": {"type": "prometheus", "uid": "prometheus"},
         "targets": [
           {
             "expr": "kube_horizontalpodautoscaler_status_desired_replicas{horizontalpodautoscaler=\"ml-scaler-hpa\"}",
-            "legendFormat": "desired"
+            "legendFormat": "desired",
+            "datasource": {"type": "prometheus", "uid": "prometheus"}
           },
           {
             "expr": "kube_horizontalpodautoscaler_status_current_replicas{horizontalpodautoscaler=\"ml-scaler-hpa\"}",
-            "legendFormat": "current"
+            "legendFormat": "current",
+            "datasource": {"type": "prometheus", "uid": "prometheus"}
           }
-        ]
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "custom": {"lineWidth": 2, "fillOpacity": 15}
+          }
+        }
       },
       {
         "id": 7,
-        "title": "Pod CPU Usage",
+        "title": "Pod CPU Usage (cores)",
         "type": "timeseries",
         "gridPos": {"h": 8, "w": 12, "x": 0, "y": 24},
+        "datasource": {"type": "prometheus", "uid": "prometheus"},
         "targets": [
           {
-            "expr": "sum(rate(container_cpu_usage_seconds_total{pod=~\"ml-scaler.*\", container!=\"\"}[1m])) by (pod)",
-            "legendFormat": "{{pod}}"
+            "expr": "sum(rate(container_cpu_usage_seconds_total{pod=~\"ml-scaler.*\"}[1m])) by (pod)",
+            "legendFormat": "{{pod}}",
+            "datasource": {"type": "prometheus", "uid": "prometheus"}
           }
-        ]
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "custom": {"lineWidth": 2, "fillOpacity": 15, "gradientMode": "scheme"}
+          }
+        }
       },
       {
         "id": 8,
         "title": "Pod Memory Usage (MB)",
         "type": "timeseries",
         "gridPos": {"h": 8, "w": 12, "x": 12, "y": 24},
+        "datasource": {"type": "prometheus", "uid": "prometheus"},
         "targets": [
           {
-            "expr": "sum(container_memory_usage_bytes{pod=~\"ml-scaler.*\", container!=\"\"}) by (pod) / 1024 / 1024",
-            "legendFormat": "{{pod}}"
+            "expr": "sum(container_memory_usage_bytes{pod=~\"ml-scaler.*\"}) by (pod) / 1024 / 1024",
+            "legendFormat": "{{pod}}",
+            "datasource": {"type": "prometheus", "uid": "prometheus"}
           }
-        ]
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "decmbytes",
+            "custom": {"lineWidth": 2, "fillOpacity": 15, "gradientMode": "scheme"}
+          }
+        }
+      },
+      {
+        "id": 9,
+        "title": "HPA CPU Utilization %",
+        "type": "gauge",
+        "gridPos": {"h": 8, "w": 8, "x": 0, "y": 32},
+        "datasource": {"type": "prometheus", "uid": "prometheus"},
+        "targets": [
+          {
+            "expr": "sum(rate(container_cpu_usage_seconds_total{pod=~\"ml-scaler.*\"}[1m])) / sum(kube_pod_container_resource_requests{pod=~\"ml-scaler.*\", resource=\"cpu\"}) * 100",
+            "legendFormat": "CPU %",
+            "datasource": {"type": "prometheus", "uid": "prometheus"}
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "min": 0,
+            "max": 100,
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": null},
+                {"color": "yellow", "value": 30},
+                {"color": "red", "value": 70}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 10,
+        "title": "Total Requests Served",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 16, "x": 8, "y": 32},
+        "datasource": {"type": "prometheus", "uid": "prometheus"},
+        "targets": [
+          {
+            "expr": "sum(http_requests_total{handler=~\"/predict|/health\"}) by (handler)",
+            "legendFormat": "total {{handler}}",
+            "datasource": {"type": "prometheus", "uid": "prometheus"}
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "custom": {"lineWidth": 2, "fillOpacity": 15}
+          }
+        }
       }
     ],
     "time": {"from": "now-15m", "to": "now"},
