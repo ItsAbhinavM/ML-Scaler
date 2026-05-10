@@ -1,8 +1,0 @@
-Method,Name,Error,Occurrences
-GET,/health,"ConnectionResetError(104, 'Connection reset by peer')",7
-POST,/predict,"ConnectionResetError(104, 'Connection reset by peer')",29
-POST,/predict,"ConnectionRefusedError(111, 'Connection refused')",8
-GET,/health,RemoteDisconnected('Remote end closed connection without response'),1
-GET,/health,"ReadTimeout(ReadTimeoutError(""HTTPConnectionPool(host='192.168.49.2', port=30081): Read timed out. (read timeout=30)""))",12
-POST,/predict,RemoteDisconnected('Remote end closed connection without response'),2
-GET,/health,"ConnectionRefusedError(111, 'Connection refused')",3
