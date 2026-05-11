@@ -4,122 +4,277 @@
   },
   "editable": true,
   "fiscalYearStartMonth": 0,
-  "graphTooltip": 0,
+  "graphTooltip": 1,
   "id": null,
   "links": [],
   "liveNow": false,
   "panels": [
     {
       "datasource": "Prometheus",
-      "fieldConfig": {
-        "defaults": {
-          "unit": "reqps"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 0
-      },
+      "fieldConfig": { "defaults": { "unit": "reqps" }, "overrides": [] },
+      "gridPos": { "h": 7, "w": 8, "x": 0, "y": 0 },
       "id": 1,
       "targets": [
         {
-          "expr": "sum(rate(yolo_requests_total[1m]))",
+          "expr": "sum by (status) (rate(yolo_requests_total{namespace=\"$namespace\",job=\"$app_job\",path=\"/predict\"}[$__rate_interval]))",
+          "legendFormat": "HTTP {{status}}",
           "refId": "A"
+        },
+        {
+          "expr": "sum(rate(yolo_requests_total{namespace=\"$namespace\",job=\"$app_job\",path=\"/predict\"}[$__rate_interval]))",
+          "legendFormat": "total",
+          "refId": "B"
         }
       ],
-      "title": "Request Throughput",
+      "title": "Throughput by Status",
       "type": "timeseries"
     },
     {
       "datasource": "Prometheus",
-      "fieldConfig": {
-        "defaults": {
-          "unit": "s"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 0
-      },
+      "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] },
+      "gridPos": { "h": 7, "w": 8, "x": 8, "y": 0 },
       "id": 2,
       "targets": [
         {
-          "expr": "histogram_quantile(0.95, sum(rate(yolo_request_latency_seconds_bucket[1m])) by (le))",
+          "expr": "sum(rate(yolo_request_latency_seconds_sum{namespace=\"$namespace\",job=\"$app_job\",path=\"/predict\"}[$__rate_interval])) / sum(rate(yolo_request_latency_seconds_count{namespace=\"$namespace\",job=\"$app_job\",path=\"/predict\"}[$__rate_interval]))",
+          "legendFormat": "average",
           "refId": "A"
+        },
+        {
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(yolo_request_latency_seconds_bucket{namespace=\"$namespace\",job=\"$app_job\",path=\"/predict\"}[$__rate_interval])))",
+          "legendFormat": "p95",
+          "refId": "B"
         }
       ],
-      "title": "P95 Latency",
+      "title": "Request Latency",
       "type": "timeseries"
     },
     {
       "datasource": "Prometheus",
-      "fieldConfig": {
-        "defaults": {
-          "unit": "s"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 8
-      },
+      "fieldConfig": { "defaults": { "unit": "percentunit", "min": 0 }, "overrides": [] },
+      "gridPos": { "h": 7, "w": 8, "x": 16, "y": 0 },
       "id": 3,
       "targets": [
         {
-          "expr": "histogram_quantile(0.95, sum(rate(yolo_inference_duration_seconds_bucket[1m])) by (le))",
+          "expr": "(sum(rate(yolo_requests_total{namespace=\"$namespace\",job=\"$app_job\",path=\"/predict\",status=~\"4..|5..\"}[$__rate_interval])) / clamp_min(sum(rate(yolo_requests_total{namespace=\"$namespace\",job=\"$app_job\",path=\"/predict\"}[$__rate_interval])), 0.001)) or vector(0)",
+          "legendFormat": "HTTP errors",
           "refId": "A"
+        },
+        {
+          "expr": "(sum(rate(yolo_errors_total{namespace=\"$namespace\",job=\"$app_job\"}[$__rate_interval])) / clamp_min(sum(rate(yolo_requests_total{namespace=\"$namespace\",job=\"$app_job\",path=\"/predict\"}[$__rate_interval])), 0.001)) or vector(0)",
+          "legendFormat": "application errors",
+          "refId": "B"
         }
       ],
-      "title": "P95 Inference Duration",
+      "title": "Error Rate",
       "type": "timeseries"
     },
     {
       "datasource": "Prometheus",
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 8
-      },
+      "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] },
+      "gridPos": { "h": 7, "w": 8, "x": 0, "y": 7 },
       "id": 4,
       "targets": [
         {
-          "expr": "sum(yolo_errors_total)",
+          "expr": "sum(rate(yolo_inference_duration_seconds_sum{namespace=\"$namespace\",job=\"$app_job\"}[$__rate_interval])) / sum(rate(yolo_inference_duration_seconds_count{namespace=\"$namespace\",job=\"$app_job\"}[$__rate_interval]))",
+          "legendFormat": "average",
+          "refId": "A"
+        },
+        {
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(yolo_inference_duration_seconds_bucket{namespace=\"$namespace\",job=\"$app_job\"}[$__rate_interval])))",
+          "legendFormat": "p95",
+          "refId": "B"
+        }
+      ],
+      "title": "Inference Duration",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "unit": "short", "min": 0 }, "overrides": [] },
+      "gridPos": { "h": 7, "w": 8, "x": 8, "y": 7 },
+      "id": 5,
+      "targets": [
+        {
+          "expr": "sum(yolo_active_requests{namespace=\"$namespace\",job=\"$app_job\"})",
+          "legendFormat": "active requests",
+          "refId": "A"
+        },
+        {
+          "expr": "count(up{namespace=\"$namespace\",job=\"$app_job\",container=\"yolo-service\"} == 1)",
+          "legendFormat": "scrape targets up",
+          "refId": "B"
+        }
+      ],
+      "title": "Live Request Concurrency",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "unit": "percent", "min": 0 }, "overrides": [] },
+      "gridPos": { "h": 7, "w": 8, "x": 16, "y": 7 },
+      "id": 6,
+      "targets": [
+        {
+          "expr": "max by (metric_name) (kube_horizontalpodautoscaler_status_target_metric{namespace=\"$namespace\",horizontalpodautoscaler=\"$hpa\",metric_target_type=\"utilization\"})",
+          "legendFormat": "{{metric_name}} utilization",
           "refId": "A"
         }
       ],
-      "title": "Error Count",
+      "title": "HPA CPU and Memory Utilization",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "unit": "short", "min": 0, "decimals": 0 }, "overrides": [] },
+      "gridPos": { "h": 7, "w": 12, "x": 0, "y": 14 },
+      "id": 7,
+      "targets": [
+        {
+          "expr": "max(kube_horizontalpodautoscaler_status_current_replicas{namespace=\"$namespace\",horizontalpodautoscaler=\"$hpa\"})",
+          "legendFormat": "current replicas",
+          "refId": "A"
+        },
+        {
+          "expr": "max(kube_horizontalpodautoscaler_status_desired_replicas{namespace=\"$namespace\",horizontalpodautoscaler=\"$hpa\"})",
+          "legendFormat": "desired replicas",
+          "refId": "B"
+        },
+        {
+          "expr": "max(kube_horizontalpodautoscaler_spec_min_replicas{namespace=\"$namespace\",horizontalpodautoscaler=\"$hpa\"})",
+          "legendFormat": "min replicas",
+          "refId": "C"
+        },
+        {
+          "expr": "max(kube_horizontalpodautoscaler_spec_max_replicas{namespace=\"$namespace\",horizontalpodautoscaler=\"$hpa\"})",
+          "legendFormat": "max replicas",
+          "refId": "D"
+        }
+      ],
+      "title": "HPA Scaling Behavior",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "unit": "cores", "min": 0 }, "overrides": [] },
+      "gridPos": { "h": 7, "w": 12, "x": 12, "y": 14 },
+      "id": 8,
+      "targets": [
+        {
+          "expr": "sum by (pod) (rate(container_cpu_usage_seconds_total{namespace=\"$namespace\",pod=~\"$pod_regex\"}[$__rate_interval]))",
+          "legendFormat": "{{pod}}",
+          "refId": "A"
+        }
+      ],
+      "title": "CPU Usage by Pod",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "unit": "bytes", "min": 0 }, "overrides": [] },
+      "gridPos": { "h": 7, "w": 12, "x": 0, "y": 21 },
+      "id": 9,
+      "targets": [
+        {
+          "expr": "sum by (pod) (container_memory_working_set_bytes{namespace=\"$namespace\",pod=~\"$pod_regex\"})",
+          "legendFormat": "{{pod}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Memory Working Set by Pod",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "unit": "short", "min": 0, "decimals": 0 }, "overrides": [] },
+      "gridPos": { "h": 7, "w": 12, "x": 12, "y": 21 },
+      "id": 10,
+      "targets": [
+        {
+          "expr": "sum(kube_pod_status_ready{namespace=\"$namespace\",pod=~\"$pod_regex\",condition=\"true\"})",
+          "legendFormat": "ready pods",
+          "refId": "A"
+        },
+        {
+          "expr": "max(kube_deployment_status_replicas_available{namespace=\"$namespace\",deployment=\"$deployment\"})",
+          "legendFormat": "available replicas",
+          "refId": "B"
+        },
+        {
+          "expr": "sum(increase(kube_pod_container_status_restarts_total{namespace=\"$namespace\",container=\"yolo-service\",pod=~\"$pod_regex\"}[$__rate_interval]))",
+          "legendFormat": "restart increases",
+          "refId": "C"
+        }
+      ],
+      "title": "Recovery and Availability",
       "type": "timeseries"
     }
   ],
+  "refresh": "10s",
   "schemaVersion": 38,
   "style": "dark",
   "tags": [
     "yolo",
-    "ml"
+    "ml",
+    "kubernetes",
+    "devops"
   ],
   "templating": {
-    "list": []
+    "list": [
+      {
+        "current": { "selected": true, "text": "yolo-devops", "value": "yolo-devops" },
+        "hide": 0,
+        "label": "Namespace",
+        "name": "namespace",
+        "options": [ { "selected": true, "text": "yolo-devops", "value": "yolo-devops" } ],
+        "query": "yolo-devops",
+        "type": "constant"
+      },
+      {
+        "current": { "selected": true, "text": "yolo-yolo-service", "value": "yolo-yolo-service" },
+        "hide": 0,
+        "label": "Application Job",
+        "name": "app_job",
+        "options": [ { "selected": true, "text": "yolo-yolo-service", "value": "yolo-yolo-service" } ],
+        "query": "yolo-yolo-service",
+        "type": "constant"
+      },
+      {
+        "current": { "selected": true, "text": "yolo-service", "value": "yolo-service" },
+        "hide": 0,
+        "label": "HPA",
+        "name": "hpa",
+        "options": [ { "selected": true, "text": "yolo-service", "value": "yolo-service" } ],
+        "query": "yolo-service",
+        "type": "constant"
+      },
+      {
+        "current": { "selected": true, "text": "yolo-yolo-service", "value": "yolo-yolo-service" },
+        "hide": 0,
+        "label": "Deployment",
+        "name": "deployment",
+        "options": [ { "selected": true, "text": "yolo-yolo-service", "value": "yolo-yolo-service" } ],
+        "query": "yolo-yolo-service",
+        "type": "constant"
+      },
+      {
+        "current": { "selected": true, "text": "yolo-yolo-service.*", "value": "yolo-yolo-service.*" },
+        "hide": 2,
+        "label": "Pod Regex",
+        "name": "pod_regex",
+        "options": [ { "selected": true, "text": "yolo-yolo-service.*", "value": "yolo-yolo-service.*" } ],
+        "query": "yolo-yolo-service.*",
+        "type": "constant"
+      }
+    ]
   },
   "time": {
-    "from": "now-15m",
+    "from": "now-30m",
     "to": "now"
   },
   "timezone": "browser",
-  "title": "YOLO Inference Service",
-  "version": 1
+  "title": "YOLO Inference Service Observability",
+  "uid": "yolo-observability",
+  "version": 2,
+  "weekStart": ""
 }
