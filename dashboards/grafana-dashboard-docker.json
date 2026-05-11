@@ -1,0 +1,165 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "unit": "reqps" }, "overrides": [] },
+      "gridPos": { "h": 7, "w": 8, "x": 0, "y": 0 },
+      "id": 1,
+      "targets": [
+        {
+          "expr": "sum by (status) (rate(yolo_requests_total{path=\"/predict\"}[$__rate_interval]))",
+          "legendFormat": "HTTP {{status}}",
+          "refId": "A"
+        },
+        {
+          "expr": "sum(rate(yolo_requests_total{path=\"/predict\"}[$__rate_interval]))",
+          "legendFormat": "total",
+          "refId": "B"
+        }
+      ],
+      "title": "Throughput by Status",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] },
+      "gridPos": { "h": 7, "w": 8, "x": 8, "y": 0 },
+      "id": 2,
+      "targets": [
+        {
+          "expr": "sum(rate(yolo_request_latency_seconds_sum{path=\"/predict\"}[$__rate_interval])) / clamp_min(sum(rate(yolo_request_latency_seconds_count{path=\"/predict\"}[$__rate_interval])), 0.001)",
+          "legendFormat": "average",
+          "refId": "A"
+        },
+        {
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(yolo_request_latency_seconds_bucket{path=\"/predict\"}[$__rate_interval])))",
+          "legendFormat": "p95",
+          "refId": "B"
+        }
+      ],
+      "title": "Request Latency",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "unit": "percentunit", "min": 0 }, "overrides": [] },
+      "gridPos": { "h": 7, "w": 8, "x": 16, "y": 0 },
+      "id": 3,
+      "targets": [
+        {
+          "expr": "(sum(rate(yolo_requests_total{path=\"/predict\",status=~\"4..|5..\"}[$__rate_interval])) / clamp_min(sum(rate(yolo_requests_total{path=\"/predict\"}[$__rate_interval])), 0.001)) or vector(0)",
+          "legendFormat": "HTTP errors",
+          "refId": "A"
+        },
+        {
+          "expr": "(sum(rate(yolo_errors_total[$__rate_interval])) / clamp_min(sum(rate(yolo_requests_total{path=\"/predict\"}[$__rate_interval])), 0.001)) or vector(0)",
+          "legendFormat": "application errors",
+          "refId": "B"
+        }
+      ],
+      "title": "Error Rate",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] },
+      "gridPos": { "h": 7, "w": 8, "x": 0, "y": 7 },
+      "id": 4,
+      "targets": [
+        {
+          "expr": "sum(rate(yolo_inference_duration_seconds_sum[$__rate_interval])) / clamp_min(sum(rate(yolo_inference_duration_seconds_count[$__rate_interval])), 0.001)",
+          "legendFormat": "average",
+          "refId": "A"
+        },
+        {
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(yolo_inference_duration_seconds_bucket[$__rate_interval])))",
+          "legendFormat": "p95",
+          "refId": "B"
+        }
+      ],
+      "title": "Inference Duration",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "unit": "short", "min": 0 }, "overrides": [] },
+      "gridPos": { "h": 7, "w": 8, "x": 8, "y": 7 },
+      "id": 5,
+      "targets": [
+        {
+          "expr": "sum(yolo_active_requests)",
+          "legendFormat": "active requests",
+          "refId": "A"
+        },
+        {
+          "expr": "max(up{job=\"yolo-service\"})",
+          "legendFormat": "target up",
+          "refId": "B"
+        }
+      ],
+      "title": "Live Request Concurrency",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "unit": "cores", "min": 0 }, "overrides": [] },
+      "gridPos": { "h": 7, "w": 12, "x": 0, "y": 14 },
+      "id": 6,
+      "targets": [
+        {
+          "expr": "sum(rate(container_cpu_usage_seconds_total{container_label_com_docker_compose_service=\"yolo-service\"}[$__rate_interval]))",
+          "legendFormat": "yolo-service CPU",
+          "refId": "A"
+        }
+      ],
+      "title": "CPU Usage (Compose)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "unit": "bytes", "min": 0 }, "overrides": [] },
+      "gridPos": { "h": 7, "w": 12, "x": 12, "y": 14 },
+      "id": 7,
+      "targets": [
+        {
+          "expr": "sum(container_memory_working_set_bytes{container_label_com_docker_compose_service=\"yolo-service\"})",
+          "legendFormat": "yolo-service memory",
+          "refId": "A"
+        }
+      ],
+      "title": "Memory Working Set (Compose)",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": [
+    "yolo",
+    "ml",
+    "docker",
+    "compose",
+    "devops"
+  ],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-30m",
+    "to": "now"
+  },
+  "timezone": "browser",
+  "title": "YOLO Inference Service Observability (Docker Compose)",
+  "uid": "yolo-observability-docker",
+  "version": 1,
+  "weekStart": ""
+}

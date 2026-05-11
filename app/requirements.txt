@@ -1,7 +1,11 @@
+--extra-index-url https://download.pytorch.org/whl/cpu
+
 fastapi==0.115.0
 uvicorn==0.30.6
 python-multipart==0.0.9
 prometheus_client==0.20.0
 ultralytics==8.2.86
-torch==2.3.1
+# CPU-only PyTorch for smaller/faster builds.
+torch==2.3.1+cpu
 opencv-python==4.10.0.84
+Pillow==10.4.0

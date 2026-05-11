@@ -38,6 +38,39 @@ docker build -t yolo-service:latest -f app/Dockerfile .
 docker run --rm -p 8000:8000 yolo-service:latest
 ```
 
+## Phase 2b: Docker Compose + Grafana (No Kubernetes)
+
+Run the same service using Docker Compose with Prometheus + Grafana:
+
+```bash
+docker compose up --build
+```
+
+Note: the Docker Compose mode runs the API in lightweight mock-inference mode (no `torch` download). Metrics and dashboards still work.
+
+Endpoints:
+
+```bash
+curl http://localhost:8001/health
+curl http://localhost:8001/metrics
+```
+
+Inference (mock):
+
+```bash
+curl -X POST http://localhost:8001/predict -F "file=@/path/to/image.jpg"
+```
+
+UIs:
+
+```text
+Grafana:    http://localhost:3002
+Prometheus: http://localhost:9090
+```
+
+Grafana is auto-provisioned with a Prometheus datasource and will load dashboards from `dashboards/`.
+Use `dashboards/grafana-dashboard-docker.json` for the Docker Compose view.
+
 ## Phase 3: Kubernetes (Minikube + Helm)
 
 ```bash

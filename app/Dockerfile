@@ -10,17 +10,17 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends libgl1 libglib2.0-0 curl \
     && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /app
+WORKDIR /workspace
 
-COPY app/requirements.txt /app/requirements.txt
+COPY app/requirements.txt /workspace/app/requirements.txt
 RUN pip install --upgrade pip \
-    && pip install -r /app/requirements.txt
+    && pip install -r /workspace/app/requirements.txt
 
-RUN curl -L -o "/app/${YOLO_MODEL}" \
+RUN curl -L -o "/workspace/${YOLO_MODEL}" \
     "https://github.com/ultralytics/assets/releases/download/v8.2.0/${YOLO_MODEL}"
 
-COPY app /app
+COPY app /workspace/app
 
 EXPOSE 8000
 
-CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "app.app:app", "--host", "0.0.0.0", "--port", "8000"]

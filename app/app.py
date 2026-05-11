@@ -4,8 +4,9 @@ from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.responses import Response
 from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 
-from metrics import ACTIVE_REQUESTS, ERRORS_TOTAL, REQUEST_LATENCY, REQUESTS_TOTAL
-from model import create_model
+from .metrics import ACTIVE_REQUESTS, ERRORS_TOTAL, REQUEST_LATENCY, REQUESTS_TOTAL
+from .metrics import INFERENCE_DURATION
+from .model import create_model
 
 app = FastAPI(title="YOLO Inference Service")
 model = create_model()
@@ -14,13 +15,6 @@ model = create_model()
 @app.get("/health")
 def health():
     return {"status": "ok"}
-
-
-@app.get("/metrics")
-def metrics():
-    data = generate_latest()
-    return Response(content=data, media_type=CONTENT_TYPE_LATEST)
-
 
 @app.post("/predict")
 async def predict(file: UploadFile = File(...)):
@@ -45,3 +39,11 @@ async def predict(file: UploadFile = File(...)):
         ACTIVE_REQUESTS.dec()
         REQUESTS_TOTAL.labels("POST", "/predict", str(status)).inc()
         REQUEST_LATENCY.labels("POST", "/predict").observe(time.perf_counter() - start)
+
+
+@app.get("/metrics")
+def metrics():
+    # Ensure histograms are exported even if no requests happened yet.
+    _ = INFERENCE_DURATION
+    data = generate_latest()
+    return Response(content=data, media_type=CONTENT_TYPE_LATEST)

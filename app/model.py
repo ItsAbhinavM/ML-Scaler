@@ -2,32 +2,66 @@ import io
 import os
 import time
 
-import cv2
 import numpy as np
-from ultralytics import YOLO
+from PIL import Image
 
-from metrics import INFERENCE_DURATION
-
-
-def _load_image(file_bytes: bytes) -> np.ndarray:
-    image_array = np.frombuffer(file_bytes, dtype=np.uint8)
-    image = cv2.imdecode(image_array, cv2.IMREAD_COLOR)
-    if image is None:
-        raise ValueError("Unable to decode image")
-    return image
+from .metrics import INFERENCE_DURATION
 
 
 class YoloModel:
     def __init__(self, model_path: str) -> None:
-        self.model = YOLO(model_path)
+        # In Docker Compose mode we keep the image lightweight (no torch/ultralytics).
+        # The API stays the same, but predictions are mocked.
+        self._mock_mode = os.getenv("YOLO_MOCK", "0") == "1"
+        self.model_path = model_path
+
+        if not self._mock_mode:
+            # Lazy import so local/k8s deployments can still use the real model.
+            from ultralytics import YOLO  # type: ignore
+
+            self.model = YOLO(model_path)
+        else:
+            self.model = None
 
     def predict(self, file_bytes: bytes, conf: float = 0.25):
-        image = _load_image(file_bytes)
+        image = self._load_image(file_bytes)
         start = time.perf_counter()
-        results = self.model.predict(source=image, conf=conf, verbose=False)
-        duration = time.perf_counter() - start
-        INFERENCE_DURATION.observe(duration)
-        return self._format_results(results)
+        try:
+            if self._mock_mode:
+                # Fake some compute that scales with image size.
+                w, h = image.size
+                work = (w * h) / (640 * 480)
+                time.sleep(min(0.05, 0.005 * max(1.0, work)))
+                return self._mock_results(image.size)
+
+            results = self.model.predict(source=np.array(image), conf=conf, verbose=False)
+            return self._format_results(results)
+        finally:
+            duration = time.perf_counter() - start
+            INFERENCE_DURATION.observe(duration)
+
+    @staticmethod
+    def _load_image(file_bytes: bytes) -> Image.Image:
+        try:
+            return Image.open(io.BytesIO(file_bytes)).convert("RGB")
+        except Exception as exc:
+            raise ValueError("Unable to decode image") from exc
+
+    @staticmethod
+    def _mock_results(size):
+        w, h = size
+        return [
+            {
+                "class_id": 0,
+                "confidence": 0.42,
+                "bbox": {
+                    "x1": w * 0.25,
+                    "y1": h * 0.25,
+                    "x2": w * 0.75,
+                    "y2": h * 0.75,
+                },
+            }
+        ]
 
     @staticmethod
     def _format_results(results):
