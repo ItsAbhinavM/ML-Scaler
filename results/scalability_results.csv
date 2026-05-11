@@ -1,0 +1,5 @@
+workload_concurrency,manual_throughput_rps,containerized_throughput_rps,kubernetes_throughput_rps,avg_latency_ms,p95_latency_ms
+200,,,4.35,36437.18,60000.66
+500,,,,,
+1000,,,,,
+5000,,,,,

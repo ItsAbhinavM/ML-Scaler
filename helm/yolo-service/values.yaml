@@ -1,0 +1,54 @@
+replicaCount: 1
+
+image:
+  repository: yolo-service
+  tag: latest
+  pullPolicy: IfNotPresent
+
+service:
+  type: NodePort
+  port: 80
+  targetPort: 8000
+
+resources:
+  requests:
+    cpu: "500m"
+    memory: "512Mi"
+  limits:
+    cpu: "1"
+    memory: "1Gi"
+
+env:
+  YOLO_MODEL: "yolov8n.pt"
+
+metrics:
+  enabled: true
+  path: /metrics
+  port: 8000
+
+serviceMonitor:
+  enabled: true
+  namespace: monitoring
+  labels:
+    release: kube-prometheus-stack
+
+hpa:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 5
+  cpuUtilization: 60
+  memoryUtilization: 70
+
+podAnnotations: {}
+serviceAccount:
+  create: false
+  name: ""
+probes:
+  liveness:
+    initialDelaySeconds: 60
+    periodSeconds: 10
+    timeoutSeconds: 2
+  readiness:
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 2

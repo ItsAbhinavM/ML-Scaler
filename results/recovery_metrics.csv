@@ -1,0 +1,4 @@
+deployment_mode,pod_recovery_time_seconds,request_failure_rate,notes
+manual,,,
+containerized_only,,,
+kubernetes_devops,33,0.4831,k6 autoscale run with pod deletion; HPA at max replicas

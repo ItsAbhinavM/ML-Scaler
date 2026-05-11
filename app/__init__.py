@@ -1,0 +1,3 @@
+"""
+YOLO inference service package.
+"""

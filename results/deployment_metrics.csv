@@ -1,0 +1,4 @@
+deployment_mode,avg_deployment_time_minutes,configuration_errors_per_10_runs,mttr_minutes,automation_level
+manual,,,,
+containerized_only,,,,
+kubernetes_devops,,,,
